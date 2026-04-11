@@ -193,16 +193,7 @@ export function GroupMessageBubble({ message, isOwn, groupId, canModerate, onDel
                   } disabled:opacity-50`}
                   title={isLiked ? 'Убрать лайк' : 'Поставить лайк'}
                 >
-                  <Heart
-                    size={12}
-                    className={`sm:w-[14px] sm:h-[14px] ${
-                      isLiked
-                        ? isOwn
-                          ? 'fill-red-200 text-red-200'
-                          : 'fill-red-500 text-red-500 dark:fill-red-400 dark:text-red-400'
-                        : ''
-                    }`}
-                  />
+                  <Heart size={12} fill={isLiked ? 'currentColor' : 'none'} />
                   <span>{likeCount}</span>
                 </button>
               )}
