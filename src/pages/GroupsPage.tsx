@@ -20,6 +20,7 @@ export function GroupsPage({ onNavigateAuth, initialInviteCode = null }: GroupsP
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     setSelectedGroupId(null);
@@ -69,6 +70,7 @@ export function GroupsPage({ onNavigateAuth, initialInviteCode = null }: GroupsP
           onSelectGroup={openChat}
           onPreviewGroup={openPreview}
           selectedGroupId={selectedGroupId}
+          refreshKey={refreshKey}
           onNewGroup={() => {
             if (canCreateGroup) {
               setShowCreateGroup(true);
@@ -119,6 +121,7 @@ export function GroupsPage({ onNavigateAuth, initialInviteCode = null }: GroupsP
           onClose={() => setShowCreateGroup(false)}
           onGroupCreated={(groupId) => {
             setShowCreateGroup(false);
+            setRefreshKey((prev) => prev + 1);
             openChat(groupId);
           }}
         />
@@ -149,3 +152,4 @@ export function GroupsPage({ onNavigateAuth, initialInviteCode = null }: GroupsP
     </div>
   );
 }
+
