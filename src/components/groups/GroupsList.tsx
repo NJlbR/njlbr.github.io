@@ -54,21 +54,29 @@ export function GroupsList({
   async function fetchGroups() {
     setLoading(true);
 
-    const { data, error } = await supabase.rpc('list_visible_groups' as any, {
-      viewer_id: user?.id ?? null,
-    });
+    const [visibleResult, creatorResult] = await Promise.all([
+      supabase.rpc('list_visible_groups' as any, {
+        viewer_id: user?.id ?? null,
+      }),
+      user?.id
+        ? supabase.rpc('list_creator_groups' as any, { creator_id: user.id })
+        : Promise.resolve({ data: null, error: null } as any),
+    ]);
 
-    if (error || !data) {
-      setGroups([]);
-      setLoading(false);
-      return;
+    const visibleGroups = (visibleResult.data as Group[] | null) ?? [];
+    const creatorGroups = (creatorResult.data as Group[] | null) ?? [];
+
+    const mergedMap = new Map<string, Group>();
+    for (const group of [...visibleGroups, ...creatorGroups]) {
+      mergedMap.set(group.id, group);
     }
 
-    const normalized = (data as Group[]).map((group) => ({
+    const merged = Array.from(mergedMap.values()).map((group) => ({
       ...group,
       is_member: group.is_member || (!!user?.id && group.created_by === user.id),
     }));
-    setGroups(normalized);
+
+    setGroups(merged);
     setLoading(false);
   }
 
