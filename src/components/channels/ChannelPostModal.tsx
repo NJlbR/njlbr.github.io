@@ -22,7 +22,7 @@ type ChannelPostPayload = Database['public']['Tables']['channel_posts']['Row'] &
     username: string;
     avatar_url?: string;
   };
-  channel_post_likes?: { id: string }[];
+  channel_post_likes?: { user_id: string }[];
 };
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
@@ -141,7 +141,7 @@ export function ChannelPostModal({ channelId, channelName, onClose, onPostCreate
             avatar_url
           ),
           channel_post_likes (
-            id
+            user_id
           )
         `
         )
@@ -311,3 +311,4 @@ export function ChannelPostModal({ channelId, channelName, onClose, onPostCreate
     </div>
   );
 }
+
