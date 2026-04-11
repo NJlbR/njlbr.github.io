@@ -90,8 +90,8 @@ export function GroupMessageBubble({ message, isOwn, groupId, canModerate, onDel
 
     try {
       const { data, error } = await supabase.rpc('delete_group_message', {
-        message_id: message.id,
-        deleter_user_id: user.id,
+        target_message_id: message.id,
+        deleting_user_id: user.id,
       } as any);
 
       if (error) throw error;
