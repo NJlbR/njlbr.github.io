@@ -185,16 +185,18 @@ export function AdminPanel() {
     setLoading(true);
 
     try {
-      const mediaUrls: any[] = [];
-
-      for (const mediaFile of mediaFiles) {
-        const url = await uploadFile(mediaFile.file, mediaFile.type);
-        mediaUrls.push({
-          type: mediaFile.type,
-          url,
-          filename: mediaFile.file.name,
-        });
-      }
+      const mediaUrls = mediaFiles.length > 0
+        ? await Promise.all(
+            mediaFiles.map(async (mediaFile) => {
+              const url = await uploadFile(mediaFile.file, mediaFile.type);
+              return {
+                type: mediaFile.type,
+                url,
+                filename: mediaFile.file.name,
+              };
+            })
+          )
+        : [];
 
       let postId = editingPostId;
 
@@ -952,3 +954,4 @@ export function AdminPanel() {
     </div>
   );
 }
+
