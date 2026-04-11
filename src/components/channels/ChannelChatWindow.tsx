@@ -148,6 +148,10 @@ export function ChannelChatWindow({ channelId, onBack, onShowInfo }: ChannelChat
 
       if (typeof count === 'number') {
         updates.set(post.id, count);
+      } else if (typeof (post as any).view_count === 'number') {
+        updates.set(post.id, (post as any).view_count + 1);
+      } else {
+        updates.set(post.id, 1);
       }
     }
 
