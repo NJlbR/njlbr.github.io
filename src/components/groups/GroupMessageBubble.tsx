@@ -192,7 +192,7 @@ export function GroupMessageBubble({ message, isOwn, groupId, canModerate, onDel
                   title={isLiked ? 'Убрать лайк' : 'Поставить лайк'}
                 >
                   <Heart size={12} className={`sm:w-[14px] sm:h-[14px] ${isLiked ? 'fill-current' : ''}`} />
-                  {likeCount > 0 && <span>{likeCount}</span>}
+                  <span>{likeCount}</span>
                 </button>
               )}
             </div>
