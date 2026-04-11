@@ -64,7 +64,11 @@ export function GroupsList({
       return;
     }
 
-    setGroups(data as Group[]);
+    const normalized = (data as Group[]).map((group) => ({
+      ...group,
+      is_member: group.is_member || (!!user?.id && group.created_by === user.id),
+    }));
+    setGroups(normalized);
     setLoading(false);
   }
 
@@ -368,5 +372,3 @@ export function GroupsList({
     </div>
   );
 }
-
-
