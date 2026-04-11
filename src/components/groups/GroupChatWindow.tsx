@@ -431,6 +431,13 @@ export function GroupChatWindow({ groupId, onBack, onShowInfo }: GroupChatWindow
               isOwn={message.sender_id === user?.id}
               groupId={groupId}
               canModerate={canModerate}
+              onLikeChange={(messageId, liked, likeCount) => {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === messageId ? { ...msg, like_count: likeCount } : msg
+                  )
+                );
+              }}
             />
           ))
         )}
