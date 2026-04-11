@@ -35,7 +35,7 @@ function HeaderContent({
             onClick={onNavigateHome}
             className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate mr-2"
           >
-            Тгк без блокировок @NJlbR
+            Тг создателя @NJlbR
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
