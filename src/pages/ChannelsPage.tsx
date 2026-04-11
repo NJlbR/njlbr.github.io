@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Rss, Lock } from 'lucide-react';
+import { Plus, Search, Rss, Lock, Globe, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { CreateChannelModal } from '../components/channels/CreateChannelModal';
@@ -23,6 +23,8 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinByCode, setShowJoinByCode] = useState(false);
+  const [showNameSearch, setShowNameSearch] = useState(false);
+  const [publicSearchQuery, setPublicSearchQuery] = useState('');
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [previewChannelId, setPreviewChannelId] = useState<string | null>(null);
   const [previewInviteCode, setPreviewInviteCode] = useState<string | null>(initialInviteCode);
@@ -68,6 +70,13 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
 
   const myChannels = filteredChannels.filter(channel => channel.is_owner || channel.is_subscribed);
   const otherChannels = filteredChannels.filter(channel => !(channel.is_owner || channel.is_subscribed));
+  const publicChannels = channels.filter(
+    channel => !channel.is_owner && !channel.is_subscribed && !channel.is_private
+  );
+  const publicSearchResults = publicChannels.filter(channel =>
+    channel.name.toLowerCase().includes(publicSearchQuery.toLowerCase()) ||
+    channel.username.toLowerCase().includes(publicSearchQuery.toLowerCase())
+  );
 
   const canCreateChannel = !!user && profile?.approval_status === 'approved';
 
@@ -169,23 +178,29 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
               Каналы
             </h2>
             <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (user) {
+                  setShowJoinByCode(true);
+                } else {
+                  onNavigateAuth();
+                }
+              }}
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              По коду
+            </button>
+            <button
+              onClick={() => setShowNameSearch(true)}
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              По названию
+            </button>
+            {canCreateChannel && (
               <button
-                onClick={() => {
-                  if (user) {
-                    setShowJoinByCode(true);
-                  } else {
-                    onNavigateAuth();
-                  }
-                }}
-                className="px-3 py-2 text-sm font-medium rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => setShowCreateModal(true)}
+                className="px-3 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
               >
-                По коду
-              </button>
-              {canCreateChannel && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="px-3 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                >
                   Создать канал
                 </button>
               )}
@@ -196,7 +211,7 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
             <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Поиск каналов..."
+              placeholder="Поиск по моим каналам..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -217,9 +232,9 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
                 </div>
               ))}
             </div>
-          ) : filteredChannels.length === 0 ? (
+          ) : myChannels.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm text-center p-4">
-              {searchQuery ? 'Каналы не найдены' : 'Пока нет доступных каналов'}
+              {searchQuery ? 'Каналы не найдены' : 'Пока нет ваших каналов'}
             </div>
           ) : (
             <div className="space-y-4">
@@ -265,86 +280,6 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
                             </div>
                           </div>
                         </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {otherChannels.length > 0 && (
-                <div>
-                  <div className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Доступные каналы
-                  </div>
-                  {otherChannels.map((channel) => {
-                    const isPrivate = !!channel.is_private;
-                    const isSelected = channel.id === previewChannelId;
-                    const canJoinDirectly = !isPrivate;
-
-                    return (
-                      <div
-                        key={channel.id}
-                        className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                          isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (isPrivate) {
-                              setShowJoinByCode(true);
-                              return;
-                            }
-
-                            openPreview({ channelId: channel.id, inviteCode: null });
-                          }}
-                          className="flex items-start gap-3 flex-1 min-w-0 text-left"
-                        >
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                            <Rss size={22} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <span className="font-semibold text-gray-900 dark:text-white truncate">
-                                {channel.name}
-                              </span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                                {formatTime(channel.updated_at)}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                @{channel.username}
-                              </p>
-                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                                {channel.subscriber_count || 0} подписч.
-                              </span>
-                            </div>
-                            <div className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                              {isPrivate ? <Lock size={12} /> : null}
-                              {isPrivate ? 'Закрытый' : 'Открытый'}
-                            </div>
-                          </div>
-                        </button>
-
-                        {canJoinDirectly ? (
-                          <button
-                            type="button"
-                            onClick={() => void handleJoinPublicChannel(channel.id)}
-                            disabled={joiningChannelId === channel.id}
-                            className="self-center px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm font-medium"
-                          >
-                            {joiningChannelId === channel.id ? '...' : 'Подписаться'}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setShowJoinByCode(true)}
-                            className="self-center px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
-                          >
-                            По коду
-                          </button>
-                        )}
                       </div>
                     );
                   })}
@@ -405,6 +340,70 @@ export function ChannelsPage({ onNavigateAuth, initialInviteCode = null }: Chann
             fetchChannels();
           }}
         />
+      )}
+
+      {showNameSearch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 text-gray-900 dark:text-white font-semibold">
+                <Globe size={18} />
+                Открытые каналы
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNameSearch(false)}
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5">
+              <div className="relative mb-4">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={publicSearchQuery}
+                  onChange={(e) => setPublicSearchQuery(e.target.value)}
+                  placeholder="Поиск открытых каналов..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+              </div>
+
+              {publicSearchResults.length === 0 ? (
+                <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
+                  Каналы не найдены
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {publicSearchResults.map((channel) => (
+                    <div
+                      key={channel.id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 dark:text-white truncate">
+                          {channel.name}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          @{channel.username}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void handleJoinPublicChannel(channel.id)}
+                        disabled={joiningChannelId === channel.id}
+                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium"
+                      >
+                        {joiningChannelId === channel.id ? '...' : 'Подписаться'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {showChannelInfo && selectedChannelId && (
