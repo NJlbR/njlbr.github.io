@@ -63,7 +63,7 @@ export function GroupMessageBubble({ message, isOwn, groupId, canModerate, onDel
 
     try {
       const { data, error } = await supabase.rpc('toggle_group_message_like', {
-        message_id_param: message.id,
+        target_message_id: message.id,
         user_id_param: user.id,
       } as any);
 
