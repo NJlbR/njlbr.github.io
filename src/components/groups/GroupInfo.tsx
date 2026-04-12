@@ -370,7 +370,7 @@ export function GroupInfo({ groupId, onClose, onLeaveGroup }: GroupInfoProps) {
                 </div>
               )}
 
-              {!groupData.is_public && (
+              {!groupData.is_public && canModerate && (
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Ссылка-приглашение:
