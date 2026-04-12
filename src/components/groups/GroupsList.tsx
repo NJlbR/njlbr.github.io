@@ -40,6 +40,7 @@ export function GroupsList({
   const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
   const [showNameSearch, setShowNameSearch] = useState(false);
   const [publicSearchQuery, setPublicSearchQuery] = useState('');
+  const [publicGroups, setPublicGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     void fetchGroups();
@@ -54,17 +55,19 @@ export function GroupsList({
   async function fetchGroups() {
     setLoading(true);
 
-    const [visibleResult, creatorResult] = await Promise.all([
+    const [visibleResult, creatorResult, publicResult] = await Promise.all([
       supabase.rpc('list_visible_groups' as any, {
         viewer_id: user?.id ?? null,
       }),
       user?.id
         ? supabase.rpc('list_creator_groups' as any, { creator_id: user.id })
         : Promise.resolve({ data: null, error: null } as any),
+      supabase.rpc('list_public_groups' as any, { viewer_id: user?.id ?? null }),
     ]);
 
     const visibleGroups = (visibleResult.data as Group[] | null) ?? [];
     const creatorGroups = (creatorResult.data as Group[] | null) ?? [];
+    const publicGroupsData = (publicResult.data as Group[] | null) ?? [];
 
     const mergedMap = new Map<string, Group>();
     for (const group of [...visibleGroups, ...creatorGroups]) {
@@ -77,6 +80,7 @@ export function GroupsList({
     }));
 
     setGroups(merged);
+    setPublicGroups(publicGroupsData);
     setLoading(false);
   }
 
@@ -141,8 +145,9 @@ export function GroupsList({
   });
 
   const myGroups = filteredGroups.filter((group) => group.is_member);
-  const publicGroups = mergedGroups.filter((group) => !group.is_member && group.is_public);
-  const publicSearchResults = publicGroups.filter((group) =>
+  const publicSearchResults = publicGroups
+    .filter((group) => !group.is_member && group.is_public)
+    .filter((group) =>
     group.name.toLowerCase().includes(publicSearchQuery.toLowerCase())
   );
 
