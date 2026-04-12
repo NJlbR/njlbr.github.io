@@ -195,6 +195,9 @@ export function ChannelSettingsModal({
     );
   }
 
+  const isCreator = channel?.created_by === user?.id;
+  const channelIsPrivate = !!channel?.is_private;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -273,58 +276,67 @@ export function ChannelSettingsModal({
             <p className="block text-sm font-medium text-gray-900 dark:text-white">
               Тип канала
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setIsPrivate(false)}
-                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  !isPrivate
-                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-medium">
-                  <Globe size={16} />
-                  Открытый
-                </div>
-                <div className="text-xs mt-1 opacity-80">Виден всем пользователям</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPrivate(true)}
-                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
-                  isPrivate
-                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-medium">
-                  <Lock size={16} />
-                  Закрытый
-                </div>
-                <div className="text-xs mt-1 opacity-80">Подписка по коду или ссылке</div>
-              </button>
-            </div>
-
-            {isPrivate && (
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Ссылка-приглашение
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg font-mono text-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 break-all">
-                    {accessCode ? `${window.location.origin}/?channel=${accessCode}` : 'Код будет создан при сохранении'}
-                  </code>
+            {isCreator ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={handleCopyLink}
-                    disabled={!accessCode}
-                    className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
-                    title="Скопировать ссылку"
+                    onClick={() => setIsPrivate(false)}
+                    className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                      !isPrivate
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                        : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+                    }`}
                   >
-                    {copied ? <Check size={18} /> : <Copy size={18} />}
+                    <div className="flex items-center gap-2 font-medium">
+                      <Globe size={16} />
+                      Открытый
+                    </div>
+                    <div className="text-xs mt-1 opacity-80">Виден всем пользователям</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrivate(true)}
+                    className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                      isPrivate
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                        : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 font-medium">
+                      <Lock size={16} />
+                      Закрытый
+                    </div>
+                    <div className="text-xs mt-1 opacity-80">Подписка по коду или ссылке</div>
                   </button>
                 </div>
+
+                {isPrivate && (
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      Ссылка-приглашение
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 rounded-lg font-mono text-sm text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 break-all">
+                        {accessCode ? `${window.location.origin}/?channel=${accessCode}` : 'Код будет создан при сохранении'}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={handleCopyLink}
+                        disabled={!accessCode}
+                        className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+                        title="Скопировать ссылку"
+                      >
+                        {copied ? <Check size={18} /> : <Copy size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                {channelIsPrivate ? <Lock size={16} /> : <Globe size={16} />}
+                {channelIsPrivate ? 'Закрытый канал' : 'Открытый канал'}
               </div>
             )}
           </div>
