@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface ChannelPreview {
   id: string;
-  username: string;
+  username: string | null;
   name: string;
   description: string | null;
   avatar_url: string | null;
@@ -153,9 +153,11 @@ export function ChannelPreviewPanel({
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             {channel.name}
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            @{channel.username}
-          </p>
+          {channel.username && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              @{channel.username}
+            </p>
+          )}
           {channel.description && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {channel.description}
