@@ -67,7 +67,10 @@ export function GroupsList({
 
     const visibleGroups = (visibleResult.data as Group[] | null) ?? [];
     const creatorGroups = (creatorResult.data as Group[] | null) ?? [];
-    const publicGroupsData = (publicResult.data as Group[] | null) ?? [];
+    let publicGroupsData = (publicResult.data as Group[] | null) ?? [];
+    if (publicResult.error || publicGroupsData.length === 0) {
+      publicGroupsData = visibleGroups.filter((group) => !!group.is_public);
+    }
 
     const mergedMap = new Map<string, Group>();
     for (const group of [...visibleGroups, ...creatorGroups]) {
