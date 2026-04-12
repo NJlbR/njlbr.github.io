@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useEffect } from 'react';
+import { useState, useMemo, memo, useEffect, useRef } from 'react';
 import { Calendar, Hash, User, ChevronDown, ChevronUp, FileText, Image as ImageIcon, Eye, Heart } from 'lucide-react';
 import { AnnotationPopup } from './AnnotationPopup';
 import { MediaContent } from './MediaContent';
@@ -29,11 +29,42 @@ function PostCardContent({ post, allAnnotations = [] }: PostCardProps) {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const hasCountedViewRef = useRef(false);
 
   useEffect(() => {
-    fetchPostStats();
+    incrementAndFetchStats();
     fetchCurrentUser();
   }, [post.id]);
+
+  async function incrementAndFetchStats() {
+    try {
+      if (!hasCountedViewRef.current) {
+        hasCountedViewRef.current = true;
+        const { error } = await supabase.rpc('increment_post_views', { post_id_param: post.id } as any);
+        if (error) console.error('Error incrementing views:', error);
+      }
+
+      const { data: stats } = await supabase.rpc('get_post_stats', { post_id_param: post.id } as any);
+      if (stats) {
+        setViewCount(stats.view_count || 0);
+        setLikeCount(stats.like_count || 0);
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: like } = await supabase
+          .from('post_likes')
+          .select('id')
+          .eq('post_id', post.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        setIsLiked(!!like);
+      }
+    } catch (err) {
+      console.error('Error fetching post stats:', err);
+    }
+  }
 
   async function fetchPostStats() {
     try {
@@ -72,9 +103,6 @@ function PostCardContent({ post, allAnnotations = [] }: PostCardProps) {
           .maybeSingle();
 
         setIsApproved(profile?.approval_status === 'approved');
-
-        const { error } = await supabase.rpc('increment_post_views', { post_id_param: post.id } as any);
-        if (error) console.error('Error incrementing views:', error);
       }
     } catch (err) {
       console.error('Error fetching user:', err);
